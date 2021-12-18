@@ -1,0 +1,66 @@
+version: '3'
+
+networks:
+  laravel:
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html:delegated
+    depends_on:
+      - php
+    networks:
+      - laravel
+    restart: always
+  mysql:
+    image: mysql:5.7
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: cmc
+      MYSQL_DATABASE: xicia_ecommerce
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - laravel
+    volumes:
+      - ./data:/var/lib/mysql
+    restart: always
+  php:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+      args:
+        - USER_ID=1001
+        - GROUP_ID=1001
+    volumes:
+      - .:/var/www/html:delegated
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    ports:
+      - "9000:9000"
+    networks:
+      - laravel
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=mysql
+    networks:
+      - laravel
+    depends_on:
+      - mysql
+    restart: always
+  
+   
+
